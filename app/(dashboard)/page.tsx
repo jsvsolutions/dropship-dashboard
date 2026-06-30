@@ -1,13 +1,18 @@
-import { DollarSign, TrendingUp, ShoppingCart, Target, BarChart2, AlertTriangle } from "lucide-react";
+"use client";
 
-const kpis = [
-  { label: "Faturamento Hoje", value: "R$ 0,00", sub: "Atualizado agora", icon: DollarSign, color: "#22c55e" },
-  { label: "Gasto em Anúncios", value: "R$ 0,00", sub: "Facebook + Google", icon: Target, color: "#3b82f6" },
-  { label: "Lucro Líquido", value: "R$ 0,00", sub: "Faturamento − custos", icon: TrendingUp, color: "#a855f7" },
-  { label: "Pedidos", value: "0", sub: "Hoje", icon: ShoppingCart, color: "#f59e0b" },
-  { label: "ROAS", value: "0x", sub: "Retorno sobre anúncio", icon: BarChart2, color: "#06b6d4" },
-  { label: "CPA Médio", value: "R$ 0,00", sub: "Custo por aquisição", icon: AlertTriangle, color: "#ef4444" },
-];
+import { useEffect, useState } from "react";
+import { DollarSign, TrendingUp, ShoppingCart, Target, BarChart2, AlertTriangle, RefreshCw } from "lucide-react";
+
+type LPQVData = {
+  pedidosHoje: number;
+  pedidosMes: number;
+  faturamentoHoje: number;
+  faturamentoMes: number;
+  faturamentoTotal: number;
+  ticketMedio: number;
+  cancelados: number;
+  aguardando: number;
+};
 
 const stages = [
   { label: "Contingência", count: 0, color: "#f59e0b" },
@@ -18,12 +23,97 @@ const stages = [
   { label: "Bloqueio", count: 0, color: "#ef4444" },
 ];
 
+function fmt(v: number) {
+  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
 export default function DashboardPage() {
+  const [lpqv, setLpqv] = useState<LPQVData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState("");
+
+  async function fetchData() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/lpqv");
+      const data = await res.json();
+      if (!data.error) {
+        setLpqv(data);
+        setLastUpdate(new Date().toLocaleTimeString("pt-BR"));
+      }
+    } catch {}
+    setLoading(false);
+  }
+
+  useEffect(() => { fetchData(); }, []);
+
+  const kpis = [
+    {
+      label: "Faturamento Hoje",
+      value: lpqv ? fmt(lpqv.faturamentoHoje) : "—",
+      sub: lastUpdate ? `Atualizado às ${lastUpdate}` : "Carregando...",
+      icon: DollarSign,
+      color: "#22c55e",
+    },
+    {
+      label: "Pedidos Hoje",
+      value: lpqv ? String(lpqv.pedidosHoje) : "—",
+      sub: "Pedidos pagos hoje",
+      icon: ShoppingCart,
+      color: "#f59e0b",
+    },
+    {
+      label: "Ticket Médio",
+      value: lpqv ? fmt(lpqv.ticketMedio) : "—",
+      sub: "Valor médio por pedido",
+      icon: BarChart2,
+      color: "#06b6d4",
+    },
+    {
+      label: "Faturamento do Mês",
+      value: lpqv ? fmt(lpqv.faturamentoMes) : "—",
+      sub: `${lpqv?.pedidosMes ?? "—"} pedidos no mês`,
+      icon: TrendingUp,
+      color: "#a855f7",
+    },
+    {
+      label: "Aguardando Pagamento",
+      value: lpqv ? String(lpqv.aguardando) : "—",
+      sub: "Pedidos pendentes",
+      icon: Target,
+      color: "#3b82f6",
+    },
+    {
+      label: "Cancelados",
+      value: lpqv ? String(lpqv.cancelados) : "—",
+      sub: "Total cancelados",
+      icon: AlertTriangle,
+      color: "#ef4444",
+    },
+  ];
+
   return (
     <div style={{ padding: "28px 32px", maxWidth: "1400px" }}>
-      <div style={{ marginBottom: "28px" }}>
-        <h1 style={{ fontSize: "20px", fontWeight: 700, color: "var(--text-primary)" }}>Dashboard</h1>
-        <p style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>Visão geral da operação — hoje</p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "28px" }}>
+        <div>
+          <h1 style={{ fontSize: "20px", fontWeight: 700, color: "var(--text-primary)" }}>Dashboard</h1>
+          <p style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>
+            Dados em tempo real da sua loja LPQV
+          </p>
+        </div>
+        <button
+          onClick={fetchData}
+          disabled={loading}
+          style={{
+            display: "flex", alignItems: "center", gap: "6px",
+            padding: "7px 12px", backgroundColor: "var(--bg-secondary)",
+            border: "1px solid var(--border)", borderRadius: "7px",
+            fontSize: "12px", color: "var(--text-secondary)", cursor: "pointer",
+          }}
+        >
+          <RefreshCw size={13} style={{ animation: loading ? "spin 1s linear infinite" : "none" }} />
+          Atualizar
+        </button>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "14px", marginBottom: "32px" }}>
@@ -35,14 +125,18 @@ export default function DashboardPage() {
                 <Icon size={14} color={color} />
               </div>
             </div>
-            <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--text-primary)" }}>{value}</div>
+            <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--text-primary)" }}>
+              {loading ? <span style={{ color: "var(--text-muted)", fontSize: "16px" }}>...</span> : value}
+            </div>
             <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px" }}>{sub}</div>
           </div>
         ))}
       </div>
 
       <div>
-        <h2 style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "14px" }}>Produtos por Estágio</h2>
+        <h2 style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "14px" }}>
+          Produtos por Estágio
+        </h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "10px" }}>
           {stages.map(({ label, count, color }) => (
             <div key={label} style={{ backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border)", borderRadius: "8px", padding: "14px", display: "flex", alignItems: "center", gap: "10px" }}>
@@ -55,6 +149,10 @@ export default function DashboardPage() {
           ))}
         </div>
       </div>
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 }
