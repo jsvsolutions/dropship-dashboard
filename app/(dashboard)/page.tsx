@@ -6,6 +6,7 @@ import { DollarSign, TrendingUp, ShoppingCart, Target, BarChart2, AlertTriangle,
 type LPQVData = {
   pedidosHoje: number;
   pedidosMes: number;
+  pedidosTotal: number;
   faturamentoHoje: number;
   faturamentoMes: number;
   faturamentoTotal: number;
@@ -77,16 +78,16 @@ export default function DashboardPage() {
       color: "#a855f7",
     },
     {
-      label: "Aguardando Pagamento",
-      value: lpqv ? String(lpqv.aguardando) : "—",
-      sub: "Pedidos pendentes",
+      label: "Faturamento Total",
+      value: lpqv ? fmt(lpqv.faturamentoTotal) : "—",
+      sub: `${lpqv?.pedidosTotal ?? "—"} pedidos pagos`,
       icon: Target,
       color: "#3b82f6",
     },
     {
       label: "Cancelados",
       value: lpqv ? String(lpqv.cancelados) : "—",
-      sub: "Total cancelados",
+      sub: `${lpqv?.aguardando ?? "—"} aguardando pagto`,
       icon: AlertTriangle,
       color: "#ef4444",
     },

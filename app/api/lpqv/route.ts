@@ -26,14 +26,22 @@ export async function GET() {
     const mesAtual = new Date().toISOString().slice(0, 7);
 
     const pagos = orders.filter((o) => o.status === "payment_accept");
-    const pedidosHoje = pagos.filter((o) => o.creat_at?.startsWith(hoje));
-    const pedidosMes = pagos.filter((o) => o.creat_at?.startsWith(mesAtual));
 
-    const faturamentoHoje = pedidosHoje.reduce((s, o) => s + parseFloat(o.payment_subtotal || 0), 0);
-    const faturamentoMes = pedidosMes.reduce((s, o) => s + parseFloat(o.payment_subtotal || 0), 0);
-    const faturamentoTotal = pagos.reduce((s, o) => s + parseFloat(o.payment_subtotal || 0), 0);
+    // campo de data pode variar entre creat_at / created_at / order_date
+    const getDate = (o: any): string =>
+      o.creat_at || o.created_at || o.order_date || o.date || "";
 
-    const ticketMedio = pedidosHoje.length > 0 ? faturamentoHoje / pedidosHoje.length : 0;
+    const pedidosHoje = pagos.filter((o) => getDate(o).startsWith(hoje));
+    const pedidosMes = pagos.filter((o) => getDate(o).startsWith(mesAtual));
+
+    const faturamentoHoje = pedidosHoje.reduce((s, o) => s + parseFloat(o.payment_subtotal || o.total || 0), 0);
+    const faturamentoMes = pedidosMes.reduce((s, o) => s + parseFloat(o.payment_subtotal || o.total || 0), 0);
+    const faturamentoTotal = pagos.reduce((s, o) => s + parseFloat(o.payment_subtotal || o.total || 0), 0);
+
+    const ticketMedio = pagos.length > 0 ? faturamentoTotal / pagos.length : 0;
+
+    // expõe o primeiro pedido para debug de campos
+    const campoPrimeiroOrdem = orders.length > 0 ? Object.keys(orders[0]) : [];
 
     return NextResponse.json({
       pedidosHoje: pedidosHoje.length,
@@ -45,6 +53,7 @@ export async function GET() {
       ticketMedio,
       cancelados: orders.filter((o) => o.status === "canceled").length,
       aguardando: orders.filter((o) => o.status === "order_created").length,
+      _debug: { campoPrimeiroOrdem, totalOrders: orders.length, hoje, mesAtual },
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
