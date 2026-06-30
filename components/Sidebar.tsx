@@ -4,9 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, Image, DollarSign,
-  TrendingUp, Settings, Zap, Sun, Moon,
+  TrendingUp, Settings, Zap, Sun, Moon, LogOut,
 } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -19,6 +21,13 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { theme, toggle } = useTheme();
+  const router = useRouter();
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+  }
 
   return (
     <aside style={{
@@ -83,6 +92,20 @@ export default function Sidebar() {
         >
           {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
           {theme === "dark" ? "Tema Claro" : "Tema Escuro"}
+        </button>
+
+        <button
+          onClick={handleLogout}
+          style={{
+            display: "flex", alignItems: "center", gap: "10px",
+            padding: "9px 10px", borderRadius: "7px", width: "100%",
+            fontSize: "13px", color: "#ef4444",
+            background: "none", border: "none", cursor: "pointer",
+            marginBottom: "2px",
+          }}
+        >
+          <LogOut size={15} />
+          Sair
         </button>
 
         <Link
