@@ -66,7 +66,7 @@ export default function DashboardPage() {
     {
       label: "Ticket Médio",
       value: lpqv ? fmt(lpqv.ticketMedio) : "—",
-      sub: "Valor médio por pedido",
+      sub: "Média geral por pedido",
       icon: BarChart2,
       color: "#06b6d4",
     },

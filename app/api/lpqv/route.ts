@@ -40,8 +40,6 @@ export async function GET() {
 
     const ticketMedio = pagos.length > 0 ? faturamentoTotal / pagos.length : 0;
 
-    // expõe o primeiro pedido para debug de campos
-    const campoPrimeiroOrdem = orders.length > 0 ? Object.keys(orders[0]) : [];
 
     return NextResponse.json({
       pedidosHoje: pedidosHoje.length,
@@ -53,7 +51,6 @@ export async function GET() {
       ticketMedio,
       cancelados: orders.filter((o) => o.status === "canceled").length,
       aguardando: orders.filter((o) => o.status === "order_created").length,
-      _debug: { campoPrimeiroOrdem, totalOrders: orders.length, hoje, mesAtual },
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
