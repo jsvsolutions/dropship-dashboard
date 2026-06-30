@@ -46,13 +46,6 @@ export default function Sidebar() {
         <span style={{ fontWeight: 700, fontSize: "15px", color: "var(--text-primary)" }}>DropDash</span>
       </div>
 
-      {/* Squad label */}
-      <div style={{ padding: "16px 16px 8px" }}>
-        <span style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", color: "var(--text-muted)", textTransform: "uppercase" }}>
-          Squad Camaleão
-        </span>
-      </div>
-
       {/* Nav */}
       <nav style={{ flex: 1, padding: "0 8px" }}>
         {navItems.map(({ href, label, icon: Icon }) => {
