@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, Image, DollarSign,
-  TrendingUp, Settings, Zap, Sun, Moon, LogOut,
+  TrendingUp, Settings, Zap, Sun, Moon, LogOut, Tag,
 } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { createClient } from "@/lib/supabase/client";
@@ -16,6 +16,7 @@ const navItems = [
   { href: "/criativos", label: "Criativos & Copies", icon: Image },
   { href: "/financeiro", label: "Financeiro", icon: DollarSign },
   { href: "/escalas", label: "Performance", icon: TrendingUp },
+  { href: "/ofertas", label: "Ofertas", icon: Tag },
 ];
 
 export default function Sidebar() {
