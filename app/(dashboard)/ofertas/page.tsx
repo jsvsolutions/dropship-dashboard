@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { Facebook, BarChart2, Pencil, Pause, Play, X, Check } from "lucide-react";
+import { Pencil, Pause, Play, X, Check } from "lucide-react";
 
 type Oferta = {
   id: string;
@@ -30,14 +29,14 @@ function fmtDate(d: string) {
 }
 
 export default function OfertasPage() {
-  const supabase = createClient();
   const [ofertas, setOfertas] = useState<Oferta[]>([]);
   const [editando, setEditando] = useState<Oferta | null>(null);
   const [loading, setLoading] = useState(true);
 
   async function fetchOfertas() {
-    const { data } = await supabase.from("ofertas").select("*").order("created_at");
-    setOfertas((data as Oferta[]) || []);
+    const res = await fetch("/api/ofertas");
+    const data = await res.json();
+    setOfertas(Array.isArray(data) ? data : []);
     setLoading(false);
   }
 
@@ -45,20 +44,29 @@ export default function OfertasPage() {
 
   async function toggleStatus(oferta: Oferta) {
     const novoStatus = oferta.status === "ativa" ? "pausada" : "ativa";
-    await supabase.from("ofertas").update({ status: novoStatus }).eq("id", oferta.id);
+    await fetch("/api/ofertas", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: oferta.id, status: novoStatus }),
+    });
     setOfertas(prev => prev.map(o => o.id === oferta.id ? { ...o, status: novoStatus } : o));
   }
 
   async function salvarEdicao() {
     if (!editando) return;
-    await supabase.from("ofertas").update({
-      nome: editando.nome,
-      preco: editando.preco,
-      plataformas: editando.plataformas,
-      inicio: editando.inicio,
-      link: editando.link,
-      notas: editando.notas,
-    }).eq("id", editando.id);
+    await fetch("/api/ofertas", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: editando.id,
+        nome: editando.nome,
+        preco: editando.preco,
+        plataformas: editando.plataformas,
+        inicio: editando.inicio,
+        link: editando.link,
+        notas: editando.notas,
+      }),
+    });
     setOfertas(prev => prev.map(o => o.id === editando.id ? editando : o));
     setEditando(null);
   }
