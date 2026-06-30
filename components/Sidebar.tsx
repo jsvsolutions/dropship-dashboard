@@ -3,14 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
-  Users,
-  Image,
-  DollarSign,
-  TrendingUp,
-  Settings,
-  Zap,
+  LayoutDashboard, Users, Image, DollarSign,
+  TrendingUp, Settings, Zap, Sun, Moon,
 } from "lucide-react";
+import { useTheme } from "./ThemeProvider";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -22,60 +18,28 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { theme, toggle } = useTheme();
 
   return (
-    <aside
-      style={{
-        width: "220px",
-        minWidth: "220px",
-        backgroundColor: "#0d0d15",
-        borderRight: "1px solid #1e1e2e",
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh",
-        position: "sticky",
-        top: 0,
-      }}
-    >
+    <aside style={{
+      width: "220px", minWidth: "220px",
+      backgroundColor: "var(--sidebar-bg)",
+      borderRight: "1px solid var(--border)",
+      display: "flex", flexDirection: "column",
+      height: "100vh", position: "sticky", top: 0,
+      transition: "background-color 0.2s",
+    }}>
       {/* Logo */}
-      <div
-        style={{
-          padding: "20px 16px",
-          borderBottom: "1px solid #1e1e2e",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-        }}
-      >
-        <div
-          style={{
-            width: "28px",
-            height: "28px",
-            backgroundColor: "#22c55e",
-            borderRadius: "6px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+      <div style={{ padding: "20px 16px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "8px" }}>
+        <div style={{ width: "28px", height: "28px", backgroundColor: "var(--accent)", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Zap size={16} color="#000" />
         </div>
-        <span style={{ fontWeight: 700, fontSize: "15px", color: "#f0f0f5" }}>
-          DropDash
-        </span>
+        <span style={{ fontWeight: 700, fontSize: "15px", color: "var(--text-primary)" }}>DropDash</span>
       </div>
 
       {/* Squad label */}
       <div style={{ padding: "16px 16px 8px" }}>
-        <span
-          style={{
-            fontSize: "10px",
-            fontWeight: 600,
-            letterSpacing: "0.1em",
-            color: "#555570",
-            textTransform: "uppercase",
-          }}
-        >
+        <span style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em", color: "var(--text-muted)", textTransform: "uppercase" }}>
           Squad Camaleão
         </span>
       </div>
@@ -89,30 +53,12 @@ export default function Sidebar() {
               key={href}
               href={href}
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                padding: "9px 10px",
-                borderRadius: "7px",
-                marginBottom: "2px",
-                fontSize: "13px",
-                fontWeight: active ? 600 : 400,
-                color: active ? "#22c55e" : "#8888aa",
-                backgroundColor: active ? "#0f2a1a" : "transparent",
-                textDecoration: "none",
-                transition: "all 0.15s",
-              }}
-              onMouseEnter={(e) => {
-                if (!active) {
-                  (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "#16161e";
-                  (e.currentTarget as HTMLAnchorElement).style.color = "#f0f0f5";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!active) {
-                  (e.currentTarget as HTMLAnchorElement).style.backgroundColor = "transparent";
-                  (e.currentTarget as HTMLAnchorElement).style.color = "#8888aa";
-                }
+                display: "flex", alignItems: "center", gap: "10px",
+                padding: "9px 10px", borderRadius: "7px", marginBottom: "2px",
+                fontSize: "13px", fontWeight: active ? 600 : 400,
+                color: active ? "var(--accent)" : "var(--text-secondary)",
+                backgroundColor: active ? "var(--sidebar-active)" : "transparent",
+                textDecoration: "none", transition: "all 0.15s",
               }}
             >
               <Icon size={15} />
@@ -123,52 +69,41 @@ export default function Sidebar() {
       </nav>
 
       {/* Bottom */}
-      <div style={{ padding: "12px 8px", borderTop: "1px solid #1e1e2e" }}>
+      <div style={{ padding: "12px 8px", borderTop: "1px solid var(--border)" }}>
+        {/* Theme toggle */}
+        <button
+          onClick={toggle}
+          style={{
+            display: "flex", alignItems: "center", gap: "10px",
+            padding: "9px 10px", borderRadius: "7px", width: "100%",
+            fontSize: "13px", color: "var(--text-muted)",
+            background: "none", border: "none", cursor: "pointer",
+            marginBottom: "2px",
+          }}
+        >
+          {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+          {theme === "dark" ? "Tema Claro" : "Tema Escuro"}
+        </button>
+
         <Link
           href="/configuracoes"
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            padding: "9px 10px",
-            borderRadius: "7px",
-            fontSize: "13px",
-            color: "#555570",
-            textDecoration: "none",
+            display: "flex", alignItems: "center", gap: "10px",
+            padding: "9px 10px", borderRadius: "7px",
+            fontSize: "13px", color: "var(--text-muted)", textDecoration: "none",
           }}
         >
           <Settings size={15} />
           Configurações
         </Link>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "10px 10px 2px",
-          }}
-        >
-          <div
-            style={{
-              width: "28px",
-              height: "28px",
-              borderRadius: "50%",
-              backgroundColor: "#22c55e",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "12px",
-              fontWeight: 700,
-              color: "#000",
-            }}
-          >
+
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 10px 2px" }}>
+          <div style={{ width: "28px", height: "28px", borderRadius: "50%", backgroundColor: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: 700, color: "#000" }}>
             U
           </div>
           <div>
-            <div style={{ fontSize: "12px", color: "#f0f0f5", fontWeight: 600 }}>
-              Usuário
-            </div>
-            <div style={{ fontSize: "11px", color: "#555570" }}>Admin</div>
+            <div style={{ fontSize: "12px", color: "var(--text-primary)", fontWeight: 600 }}>Usuário</div>
+            <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Admin</div>
           </div>
         </div>
       </div>
