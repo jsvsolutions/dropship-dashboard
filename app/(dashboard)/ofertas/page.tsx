@@ -19,8 +19,11 @@ type Criativo = {
   titulo: string;
   copy: string;
   plataforma: string;
-  url: string; // base64 da imagem
+  url: string;
+  observacao?: string;
 };
+
+type CriativoForm = { titulo: string; copy: string; plataforma: string; observacao: string };
 
 const platformColor: Record<string, string> = {
   "Facebook": "#1877f2",
@@ -49,10 +52,8 @@ async function comprimirImagem(file: File): Promise<string> {
           else { width = Math.round((width * MAX) / height); height = MAX; }
         }
         const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d")!;
-        ctx.drawImage(img, 0, 0, width, height);
+        canvas.width = width; canvas.height = height;
+        canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
         resolve(canvas.toDataURL("image/jpeg", 0.65));
       };
     };
@@ -67,6 +68,81 @@ const inputStyle = {
   outline: "none", boxSizing: "border-box" as const,
 };
 
+const emptyForm: CriativoForm = { titulo: "", copy: "", plataforma: "Facebook", observacao: "" };
+
+function ModalCriativo({ titulo: tituloModal, form, setForm, imagemBase64, setImagemBase64, onSalvar, onFechar, salvando }: {
+  titulo: string;
+  form: CriativoForm;
+  setForm: React.Dispatch<React.SetStateAction<CriativoForm>>;
+  imagemBase64: string;
+  setImagemBase64: (s: string) => void;
+  onSalvar: () => void;
+  onFechar: () => void;
+  salvando: boolean;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImagemBase64(await comprimirImagem(file));
+  }
+
+  return (
+    <div style={{ position: "fixed", inset: 0, backgroundColor: "#00000088", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
+      <div style={{ backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border)", borderRadius: "12px", padding: "28px", width: "100%", maxWidth: "460px", maxHeight: "90vh", overflowY: "auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+          <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>{tituloModal}</h3>
+          <button onClick={onFechar} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}><X size={16} /></button>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          <div>
+            <label style={{ fontSize: "11px", color: "var(--text-muted)", display: "block", marginBottom: "5px" }}>Título *</label>
+            <input style={inputStyle} placeholder="Ex: Criativo Gancho Dor" value={form.titulo} onChange={e => setForm(p => ({ ...p, titulo: e.target.value }))} />
+          </div>
+          <div>
+            <label style={{ fontSize: "11px", color: "var(--text-muted)", display: "block", marginBottom: "5px" }}>Copy</label>
+            <textarea style={{ ...inputStyle, resize: "vertical", minHeight: "80px" }} placeholder="Cole aqui o texto do anúncio..." value={form.copy} onChange={e => setForm(p => ({ ...p, copy: e.target.value }))} />
+          </div>
+          <div>
+            <label style={{ fontSize: "11px", color: "var(--text-muted)", display: "block", marginBottom: "5px" }}>Observação</label>
+            <textarea style={{ ...inputStyle, resize: "vertical", minHeight: "60px" }} placeholder="Notas internas sobre este criativo..." value={form.observacao} onChange={e => setForm(p => ({ ...p, observacao: e.target.value }))} />
+          </div>
+          <div>
+            <label style={{ fontSize: "11px", color: "var(--text-muted)", display: "block", marginBottom: "5px" }}>Plataforma</label>
+            <select style={inputStyle} value={form.plataforma} onChange={e => setForm(p => ({ ...p, plataforma: e.target.value }))}>
+              <option>Facebook</option>
+              <option>Google Ads (FDF)</option>
+              <option>Ambos</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: "11px", color: "var(--text-muted)", display: "block", marginBottom: "8px" }}>Imagem (PNG)</label>
+            <input ref={fileRef} type="file" accept="image/png,image/jpeg" onChange={handleUpload} style={{ display: "none" }} />
+            {imagemBase64 ? (
+              <div style={{ position: "relative" }}>
+                <img src={imagemBase64} alt="preview" style={{ width: "100%", maxHeight: "180px", objectFit: "cover", borderRadius: "8px" }} />
+                <button onClick={() => setImagemBase64("")} style={{ position: "absolute", top: "6px", right: "6px", background: "#000000bb", border: "none", borderRadius: "50%", width: "22px", height: "22px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}><X size={11} /></button>
+              </div>
+            ) : (
+              <button onClick={() => fileRef.current?.click()} style={{ width: "100%", padding: "24px", border: "2px dashed var(--border)", borderRadius: "8px", background: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "12px", display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+                <ImageIcon size={20} />
+                Clique para selecionar a imagem
+              </button>
+            )}
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: "8px", marginTop: "20px", justifyContent: "flex-end" }}>
+          <button onClick={onFechar} style={{ padding: "8px 16px", borderRadius: "7px", border: "1px solid var(--border)", backgroundColor: "var(--bg-primary)", color: "var(--text-secondary)", fontSize: "13px", cursor: "pointer" }}>Cancelar</button>
+          <button onClick={onSalvar} disabled={salvando || !form.titulo.trim()} style={{ padding: "8px 16px", borderRadius: "7px", border: "none", backgroundColor: "var(--accent)", color: "#000", fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", opacity: salvando ? 0.7 : 1 }}>
+            <Check size={13} /> {salvando ? "Salvando..." : "Salvar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function OfertasPage() {
   const [ofertas, setOfertas] = useState<Oferta[]>([]);
   const [editando, setEditando] = useState<Oferta | null>(null);
@@ -74,11 +150,18 @@ export default function OfertasPage() {
   const [expandido, setExpandido] = useState<string | null>(null);
   const [criativos, setCriativos] = useState<Record<string, Criativo[]>>({});
   const [loadingCriativos, setLoadingCriativos] = useState<string | null>(null);
+
+  // Modal adicionar criativo
   const [modalOferta, setModalOferta] = useState<string | null>(null);
-  const [form, setForm] = useState({ titulo: "", copy: "", plataforma: "Facebook" });
-  const [imagemBase64, setImagemBase64] = useState<string>("");
+  const [form, setForm] = useState<CriativoForm>(emptyForm);
+  const [imagemBase64, setImagemBase64] = useState("");
   const [salvando, setSalvando] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
+
+  // Modal editar criativo
+  const [editandoCriativo, setEditandoCriativo] = useState<{ data: Criativo; ofertaId: string } | null>(null);
+  const [editForm, setEditForm] = useState<CriativoForm>(emptyForm);
+  const [editImagemBase64, setEditImagemBase64] = useState("");
+  const [salvandoEdit, setSalvandoEdit] = useState(false);
 
   useEffect(() => { fetchOfertas(); }, []);
 
@@ -125,29 +208,47 @@ export default function OfertasPage() {
     setEditando(null);
   }
 
-  async function handleImagemUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const base64 = await comprimirImagem(file);
-    setImagemBase64(base64);
-  }
-
   async function salvarCriativo() {
     if (!modalOferta || !form.titulo.trim()) return;
     setSalvando(true);
     const res = await fetch("/api/criativos-oferta", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ titulo: form.titulo, copy: form.copy, plataforma: form.plataforma, produto: modalOferta, url: imagemBase64 }),
+      body: JSON.stringify({ titulo: form.titulo, copy: form.copy, plataforma: form.plataforma, produto: modalOferta, url: imagemBase64, observacao: form.observacao }),
     });
     const novo = await res.json();
     if (!novo.error) {
       setCriativos(prev => ({ ...prev, [modalOferta]: [novo, ...(prev[modalOferta] || [])] }));
     }
     setModalOferta(null);
-    setForm({ titulo: "", copy: "", plataforma: "Facebook" });
+    setForm(emptyForm);
     setImagemBase64("");
     setSalvando(false);
+  }
+
+  function abrirEditarCriativo(c: Criativo, ofertaId: string) {
+    setEditandoCriativo({ data: c, ofertaId });
+    setEditForm({ titulo: c.titulo, copy: c.copy || "", plataforma: c.plataforma, observacao: c.observacao || "" });
+    setEditImagemBase64(c.url || "");
+  }
+
+  async function salvarEdicaoCriativo() {
+    if (!editandoCriativo || !editForm.titulo.trim()) return;
+    setSalvandoEdit(true);
+    const res = await fetch("/api/criativos-oferta", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: editandoCriativo.data.id, ...editForm, url: editImagemBase64 }),
+    });
+    const atualizado = await res.json();
+    if (!atualizado.error) {
+      setCriativos(prev => ({
+        ...prev,
+        [editandoCriativo.ofertaId]: prev[editandoCriativo.ofertaId].map(c => c.id === editandoCriativo.data.id ? atualizado : c),
+      }));
+    }
+    setEditandoCriativo(null);
+    setSalvandoEdit(false);
   }
 
   async function deletarCriativo(ofertaId: string, id: string) {
@@ -174,7 +275,6 @@ export default function OfertasPage() {
               borderRadius: "12px", overflow: "hidden",
               borderLeft: `3px solid ${oferta.status === "ativa" ? "#22c55e" : "#6b7280"}`,
             }}>
-              {/* Cabeçalho da oferta */}
               <div style={{ padding: "22px 24px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
                   <div style={{ flex: 1 }}>
@@ -203,7 +303,6 @@ export default function OfertasPage() {
                 </div>
               </div>
 
-              {/* Seção de criativos */}
               <div style={{ borderTop: "1px solid var(--border)" }}>
                 <button onClick={() => toggleExpandido(oferta.id)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 24px", background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)", fontSize: "12px", fontWeight: 600 }}>
                   <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -238,10 +337,18 @@ export default function OfertasPage() {
                             )}
                             <div style={{ padding: "10px" }}>
                               <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "4px" }}>{c.titulo}</div>
-                              {c.copy && <p style={{ fontSize: "11px", color: "var(--text-secondary)", lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden", marginBottom: "6px" }}>{c.copy}</p>}
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              {c.copy && <p style={{ fontSize: "11px", color: "var(--text-secondary)", lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden", marginBottom: "4px" }}>{c.copy}</p>}
+                              {c.observacao && <p style={{ fontSize: "10px", color: "var(--text-muted)", fontStyle: "italic", lineHeight: 1.3, marginBottom: "6px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{c.observacao}</p>}
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "6px" }}>
                                 <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "4px", backgroundColor: (platformColor[c.plataforma] || "#6b7280") + "22", color: platformColor[c.plataforma] || "#9ca3af" }}>{c.plataforma}</span>
-                                <button onClick={() => deletarCriativo(oferta.id, c.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", padding: 0 }}><Trash2 size={12} /></button>
+                                <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                                  <button onClick={() => abrirEditarCriativo(c, oferta.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", padding: 0, display: "flex" }} title="Editar">
+                                    <Pencil size={12} />
+                                  </button>
+                                  <button onClick={() => deletarCriativo(oferta.id, c.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", padding: 0, display: "flex" }} title="Excluir">
+                                    <Trash2 size={12} />
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -289,53 +396,30 @@ export default function OfertasPage() {
 
       {/* Modal adicionar criativo */}
       {modalOferta && (
-        <div style={{ position: "fixed", inset: 0, backgroundColor: "#00000088", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50 }}>
-          <div style={{ backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border)", borderRadius: "12px", padding: "28px", width: "100%", maxWidth: "460px", maxHeight: "90vh", overflowY: "auto" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-              <h3 style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>Adicionar Criativo</h3>
-              <button onClick={() => { setModalOferta(null); setImagemBase64(""); setForm({ titulo: "", copy: "", plataforma: "Facebook" }); }} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)" }}><X size={16} /></button>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-              <div>
-                <label style={{ fontSize: "11px", color: "var(--text-muted)", display: "block", marginBottom: "5px" }}>Título *</label>
-                <input style={inputStyle} placeholder="Ex: Criativo Gancho Dor" value={form.titulo} onChange={e => setForm(p => ({ ...p, titulo: e.target.value }))} />
-              </div>
-              <div>
-                <label style={{ fontSize: "11px", color: "var(--text-muted)", display: "block", marginBottom: "5px" }}>Copy</label>
-                <textarea style={{ ...inputStyle, resize: "vertical", minHeight: "80px" }} placeholder="Cole aqui o texto do anúncio..." value={form.copy} onChange={e => setForm(p => ({ ...p, copy: e.target.value }))} />
-              </div>
-              <div>
-                <label style={{ fontSize: "11px", color: "var(--text-muted)", display: "block", marginBottom: "5px" }}>Plataforma</label>
-                <select style={inputStyle} value={form.plataforma} onChange={e => setForm(p => ({ ...p, plataforma: e.target.value }))}>
-                  <option>Facebook</option>
-                  <option>Google Ads (FDF)</option>
-                  <option>Ambos</option>
-                </select>
-              </div>
-              <div>
-                <label style={{ fontSize: "11px", color: "var(--text-muted)", display: "block", marginBottom: "8px" }}>Imagem (PNG)</label>
-                <input ref={fileRef} type="file" accept="image/png,image/jpeg" onChange={handleImagemUpload} style={{ display: "none" }} />
-                {imagemBase64 ? (
-                  <div style={{ position: "relative" }}>
-                    <img src={imagemBase64} alt="preview" style={{ width: "100%", maxHeight: "180px", objectFit: "cover", borderRadius: "8px" }} />
-                    <button onClick={() => setImagemBase64("")} style={{ position: "absolute", top: "6px", right: "6px", background: "#000000bb", border: "none", borderRadius: "50%", width: "22px", height: "22px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}><X size={11} /></button>
-                  </div>
-                ) : (
-                  <button onClick={() => fileRef.current?.click()} style={{ width: "100%", padding: "24px", border: "2px dashed var(--border)", borderRadius: "8px", background: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "12px", display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
-                    <ImageIcon size={20} />
-                    Clique para selecionar a imagem
-                  </button>
-                )}
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: "8px", marginTop: "20px", justifyContent: "flex-end" }}>
-              <button onClick={() => { setModalOferta(null); setImagemBase64(""); setForm({ titulo: "", copy: "", plataforma: "Facebook" }); }} style={{ padding: "8px 16px", borderRadius: "7px", border: "1px solid var(--border)", backgroundColor: "var(--bg-primary)", color: "var(--text-secondary)", fontSize: "13px", cursor: "pointer" }}>Cancelar</button>
-              <button onClick={salvarCriativo} disabled={salvando || !form.titulo.trim()} style={{ padding: "8px 16px", borderRadius: "7px", border: "none", backgroundColor: "var(--accent)", color: "#000", fontSize: "13px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", opacity: salvando ? 0.7 : 1 }}>
-                <Check size={13} /> {salvando ? "Salvando..." : "Salvar"}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ModalCriativo
+          titulo="Adicionar Criativo"
+          form={form}
+          setForm={setForm}
+          imagemBase64={imagemBase64}
+          setImagemBase64={setImagemBase64}
+          onSalvar={salvarCriativo}
+          onFechar={() => { setModalOferta(null); setForm(emptyForm); setImagemBase64(""); }}
+          salvando={salvando}
+        />
+      )}
+
+      {/* Modal editar criativo */}
+      {editandoCriativo && (
+        <ModalCriativo
+          titulo="Editar Criativo"
+          form={editForm}
+          setForm={setEditForm}
+          imagemBase64={editImagemBase64}
+          setImagemBase64={setEditImagemBase64}
+          onSalvar={salvarEdicaoCriativo}
+          onFechar={() => setEditandoCriativo(null)}
+          salvando={salvandoEdit}
+        />
       )}
     </div>
   );
