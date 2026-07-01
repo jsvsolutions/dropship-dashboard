@@ -48,8 +48,11 @@ export default function Sidebar() {
         <span style={{ fontWeight: 700, fontSize: "15px", color: "var(--text-primary)" }}>DropDash</span>
       </div>
 
+      {/* Spacer */}
+      <div style={{ flex: 1 }} />
+
       {/* Nav */}
-      <nav style={{ flex: 1, padding: "0 8px" }}>
+      <nav style={{ padding: "0 8px 8px" }}>
         {navItems.map(({ href, label, icon: Icon }) => {
           const active = pathname === href;
           return (
