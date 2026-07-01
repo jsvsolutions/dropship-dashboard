@@ -17,6 +17,9 @@ const navItems = [
   { href: "/ofertas", label: "Ofertas", icon: Tag },
   { href: "/mineracao", label: "Mineração", icon: ScanSearch },
   { href: "/contingencia", label: "Contingência", icon: ShieldAlert },
+];
+
+const bottomNavItems = [
   { href: "/notas", label: "Notas", icon: NotebookPen },
 ];
 
@@ -48,12 +51,33 @@ export default function Sidebar() {
         <span style={{ fontWeight: 700, fontSize: "15px", color: "var(--text-primary)" }}>DropDash</span>
       </div>
 
-      {/* Spacer */}
-      <div style={{ flex: 1 }} />
-
-      {/* Nav */}
-      <nav style={{ padding: "0 8px 8px" }}>
+      {/* Nav principal */}
+      <nav style={{ flex: 1, padding: "0 8px" }}>
         {navItems.map(({ href, label, icon: Icon }) => {
+          const active = pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              style={{
+                display: "flex", alignItems: "center", gap: "10px",
+                padding: "9px 10px", borderRadius: "7px", marginBottom: "2px",
+                fontSize: "13px", fontWeight: active ? 600 : 400,
+                color: active ? "var(--accent)" : "var(--text-secondary)",
+                backgroundColor: active ? "var(--sidebar-active)" : "transparent",
+                textDecoration: "none", transition: "all 0.15s",
+              }}
+            >
+              <Icon size={15} />
+              {label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Nav inferior (acima da linha) */}
+      <nav style={{ padding: "0 8px 4px" }}>
+        {bottomNavItems.map(({ href, label, icon: Icon }) => {
           const active = pathname === href;
           return (
             <Link
