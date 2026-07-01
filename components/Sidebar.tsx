@@ -13,9 +13,7 @@ import { useRouter } from "next/navigation";
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/agentes", label: "Painel de Agentes", icon: Users },
-  { href: "/criativos", label: "Criativos & Copies", icon: Image },
   { href: "/financeiro", label: "Financeiro", icon: DollarSign },
-  { href: "/escalas", label: "Performance", icon: TrendingUp },
   { href: "/ofertas", label: "Ofertas", icon: Tag },
   { href: "/mineracao", label: "Mineração", icon: ScanSearch },
 ];
